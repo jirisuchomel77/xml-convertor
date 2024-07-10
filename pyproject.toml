@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "rossum"
+version = "0.1.0"
+description = ""
+authors = ["Jiří Suchomel <suchomel.jiri@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.111.0"
+
+aiohttp = "^3.9.5"
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+ruff = "^0.0.282"
+
+[tool.poetry.scripts]
+rossum = "rossum.entrypoint:main"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.isort]
+combine-as-imports = true
+
+[tool.ruff]
+format = "grouped"
+line-length = 120
+select = [
+    "F",   # flake8 / pyflakes
+    "E",   # flake8 / pycodestyle, errors
+    "W",   # flake8 / pycodestyle, warning
+    "C90", # McCabe
+    "I",   # isort
+    "N",   # pep8 naming, might already by checked by PyLint
+    "D",   # pydocstyle
+    "UP",  # pyupgrade
+    "S",   # bandit
+    "A",   # builtins
+    "RUF", # ruff specific
+]
+ignore = [
+    "D203",  # one-blank-line-before-class
+    "D213",  # multi-line-summary-second-line
+    "S314",  # xml
+    "S318",  # xml
+]
+
+[tool.ruff.mccabe]
+max-complexity = 12
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.black]
+line-length = 120
