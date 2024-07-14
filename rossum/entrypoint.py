@@ -23,14 +23,14 @@ ROSSUM_DOMAIN = os.getenv("ROSSUM_DOMAIN")
 ROSSUM_USERNAME = os.getenv("ROSSUM_USERNAME")
 ROSSUM_PASSWORD = os.getenv("ROSSUM_PASSWORD")
 
-POSTBIN_URL = os.getenv("POSTBIN_URL") # we could actually create new bin via the api...
+POSTBIN_URL = os.getenv("POSTBIN_URL")  # we could actually create new bin via the api...
 
 app = FastAPI()
 security = HTTPBasic()
 
 
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
-    """Verify credentials."""
+    """Verify credentials using basic auth."""
     if credentials.username != USERNAME or credentials.password != PASSWORD:
         raise HTTPException(
             status_code=401,
@@ -89,18 +89,19 @@ async def download_schema(xml_root: ElementTree.Element, token: str):
                     detail=f"Failed to download schema: {detail}",
                 )
 
+
 async def transform_xml(root: ElementTree.Element, schema: str):
     """Transform the XML using provided schema file."""
 
     def clean_label(label):
         # Remove spaces from label and convert to camelCase
-        cleaned_label = re.sub(r'\s+', '', label.title())
+        cleaned_label = re.sub(r"\s+", "", label.title())
         # escape special chars
-        cleaned_label = re.sub(r'[&]', '_', cleaned_label)
+        cleaned_label = re.sub(r"[&]", "_", cleaned_label)
         return cleaned_label
 
     # prepare output XML root
-    output_root = ElementTree.Element("Export") # FIXME maybe this should be document_type ?
+    output_root = ElementTree.Element("Export")  # FIXME maybe this should be document_type ?
 
     # traverse schema and XML to dynamically create output XML
     for section in schema["content"]:
@@ -151,41 +152,32 @@ async def transform_xml(root: ElementTree.Element, schema: str):
                                     tuple_datapoint_xml_element.text = tuple_datapoint_element.text
 
     # Generate output XML string
-    output_xml_str = ElementTree.tostring(output_root, encoding='utf-8', xml_declaration=True).decode('utf-8')
+    output_xml_str = ElementTree.tostring(output_root, encoding="utf-8", xml_declaration=True).decode("utf-8")
     # ... and prettify it
     dom = minidom.parseString(output_xml_str)
     pretty_output_xml = dom.toprettyxml(indent="    ")
     return pretty_output_xml
 
+
 async def publish_converted(xml: str, annotation_id: str) -> bool:
     """Publish converted XML to the bin."""
-    # Encode XML content as base64
-    encoded_content = base64.b64encode(xml.encode()).decode()
 
-    # Prepare JSON payload for POST request
-    payload = {
-        "annotationId": annotation_id,
-        "content": encoded_content
-    }
+    encoded_content = base64.b64encode(xml.encode()).decode()
+    payload = {"annotationId": annotation_id, "content": encoded_content}
 
     async with aiohttp.ClientSession() as session:
         async with session.post(POSTBIN_URL, json=payload) as response:
-            print(f"respose status: {response.status}")
-            print(f"returned: {await response.text()}")
-            return response.status == 200
+            if response.status == 200:
+                return
+            else:
+                raise HTTPException(
+                    status_code=response.status,
+                    detail=f"Failed to save to postbin: {response.reason}",
+                )
 
 
-
-@app.get("/export")
-async def export(
-    annotation_id: str = Header(..., description="The ID of the annotation"),
-    queue_id: str = Header(..., description="The ID of the annotation queue"),
-    credentials: HTTPBasicCredentials = Depends(verify_credentials),
-):
-    """Endpoint for xml conversion.
-
-    Requires basic authentication, annotation_id and queue_id for Rossum API.
-    """
+async def handle_export_endpoint(annotation_id, queue_id):
+    """Handle the whole logic for export action."""
     # Check the presence of query parameters
     if not annotation_id or not queue_id:
         raise HTTPException(
@@ -206,7 +198,6 @@ async def export(
         raise HTTPException(
             status_code=status,
         )
-        # FIXME or return JSONResponse with success?
 
     try:
         xml_root = ElementTree.fromstring(text)
@@ -217,9 +208,26 @@ async def export(
 
     transformed_xml = await transform_xml(xml_root, schema)
 
-    success = await publish_converted(transformed_xml, annotation_id)
-    result = {"success": success}
-    return JSONResponse(content=result)
+    await publish_converted(transformed_xml, annotation_id)
+
+
+@app.get("/export")
+async def export(
+    annotation_id: str = Header(..., description="The ID of the annotation"),
+    queue_id: str = Header(..., description="The ID of the annotation queue"),
+    credentials: HTTPBasicCredentials = Depends(security),
+):
+    """Endpoint for xml conversion.
+
+    Requires basic authentication, annotation_id and queue_id for Rossum API.
+    """
+    try:
+        # calling verify_credentials explicitly so we can transform exception into JSON response
+        verify_credentials(credentials)
+        await handle_export_endpoint(annotation_id, queue_id)
+        return JSONResponse(content={"success": True})
+    except HTTPException as e:
+        return JSONResponse(status_code=e.status_code, content={"success": False, "detail": e.detail})
 
 
 @app.on_event("startup")
