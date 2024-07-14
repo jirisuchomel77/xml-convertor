@@ -4,17 +4,17 @@ The goal of the application is to provide one endpoint /export that will convert
 
 The original problem assignment:
 
-*Validate that the request came from an authorized source, using Basic Authentication. The right credentials should be stored as environment variables in the environment that your application can access. The username shall be myUser123, password secretSecret.
+*Validate that the request came from an authorized source, using Basic Authentication. The right credentials should be stored as environment variables in the environment that your application can access. The username shall be myUser123, password secretSecret.*
 
-Accept the user request where the user passes the ID of the annotation they want to get the data for and the queue ID of the annotation where the annotation is located in Rossum. The way how the users shall pass this information is up to you. Validate that the request format is correct and it contains everything necessary.
+*Accept the user request where the user passes the ID of the annotation they want to get the data for and the queue ID of the annotation where the annotation is located in Rossum. The way how the users shall pass this information is up to you. Validate that the request format is correct and it contains everything necessary.*
 
-Within the endpoint, use the passed values to download data for a sample annotation in your Rossum account, using a call on /export endpoint of Rossum API. (Create a new Rossum account here. To create the Rossum account, you can use some temporary email, for example from this website.) The content of the response will be similar to this.
+*Within the endpoint, use the passed values to download data for a sample annotation in your Rossum account, using a call on /export endpoint of Rossum API. (Create a new Rossum account here. To create the Rossum account, you can use some temporary email, for example from this website.) The content of the response will be similar to this.*
 
-Convert the data that you have received, so that the output data has the following format.
+*Convert the data that you have received, so that the output data has the following format.*
 
-Send the converted content as a REST API POST request to dummy post bin endpoint (you can create one here https://www.toptal.com/developers/postbin/ ), with no authentication details and data as JSON with the keys annotationId and the value of the original annotation ID and the key content with the data in XML as a base64 string.
+*Send the converted content as a REST API POST request to dummy post bin endpoint (you can create one here https://www.toptal.com/developers/postbin/ ), with no authentication details and data as JSON with the keys annotationId and the value of the original annotation ID and the key content with the data in XML as a base64 string.*
 
-Return a JSON with a key success, filled by true or false, depending on whether the request could be posted successfully or not.*
+*Return a JSON with a key success, filled by true or false, depending on whether the request could be posted successfully or not.*
 
 ## Requirements
 
@@ -45,7 +45,7 @@ ROSSUM_PASSWORD=<your rossum password>
 ROSSUM_DOMAIN=<your rossum domain>
 ```
 
-And finally the URL for the postbin where the converted data should be saved.
+And finally the URL for the postbin where the converted data should be saved. For example:
 ```
 export POSTBIN_URL=https://www.postb.in/1720972373333-3732320638373
 ```
