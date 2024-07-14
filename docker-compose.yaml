@@ -6,8 +6,13 @@ services:
     image: rossum_convert:latest
 
     environment:
-      BASIC_AUTH_USERNAME: ${BASIC_AUTH_USERNAME}
-      BASIC_AUTH_PASSWORD: ${BASIC_AUTH_PASSWORD}
+      BASIC_AUTH_USERNAME: myUser123
+      BASIC_AUTH_PASSWORD: secretSecret
+      ROSSUM_DOMAIN: ${ROSSUM_DOMAIN}
+      ROSSUM_BEARER_TOKEN: ${ROSSUM_BEARER_TOKEN}
+      ROSSUM_USERNAME: ${ROSSUM_USERNAME}
+      ROSSUM_PASSWORD: ${ROSSUM_PASSWORD}
+      POSTBIN_URL: ${POSTBIN_URL}
 
     ports:
       - "8080:8080"
@@ -18,13 +23,12 @@ services:
     image: curlimages/curl
     depends_on:
       - rossum
-    #command: curl -u myUser123:secretSecret http://rossum:8080/export
     command:
       - /bin/sh
       - -c
       - |
-        curl -u myUser123:secretSecret -H "annotation-id: 123" -H "queue-id: 456" http://rossum:8080/export
-        #curl -u myUser123:secretSecret -H "annotation-id: 3227735" -H "queue-id: 1161196" http://127.0.0.1:8080/export
+        sleep 5 # ok, this should be smarter...
+        curl -u myUser123:secretSecret -H "annotation-id: 3227735" -H "queue-id: 1161196" http://rossum:8080/export
 
   # Universal docker compose for running any command via poetry
   poetry:
